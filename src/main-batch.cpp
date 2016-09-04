@@ -32,7 +32,7 @@ inline void batch_process(const vector<shared_ptr<vector<double>>> &data,
   mutex read_mutex, write_mutex;
   auto iter = data.begin();
   for (int i = 0; i < numthread; i++) {
-    threadvec.push_back(thread([&](int idx) -> void {
+    threadvec.push_back(move(thread([&](int idx) -> void {
       shared_ptr<vector<double>> str;
       while (true) {
         {
@@ -49,9 +49,9 @@ inline void batch_process(const vector<shared_ptr<vector<double>>> &data,
           res[id[idx]] = algvec[idx]->get_result();
         }
       }
-    }, i));
+    }, i)));
   }
-  for (auto& t : threadvec) {
+  for (auto &t : threadvec) {
     t.join();
   }
 }
