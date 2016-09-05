@@ -4,7 +4,7 @@ set(LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/)
 set(EXTERN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/)
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
-project(segfit CXX Fortran)
+project(segfit CXX Fortran C)
 
 file(GLOB MAIN_SRC ${SRC_DIR}/main*.cpp)
 
