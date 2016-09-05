@@ -24,32 +24,33 @@
 
 using namespace std;
 
-inline void batch_process(const vector<shared_ptr<vector<double>>> &data,
-                          const vector<string> &id, const int &numthread,
-                          vector<unique_ptr<SegAlg>> &algvec,
-                          map<string, shared_ptr<vector<Segment>>> &res) {
+inline void batch_process(map<string, shared_ptr<vector<double>>> &datamap,
+                          int &numthread, vector<unique_ptr<SegAlg>> &algvec,
+                          map<string, vector<Segment>> &res) {
   vector<thread> threadvec;
   mutex read_mutex, write_mutex;
-  auto iter = data.begin();
+  auto iter = datamap.begin();
+
   for (int i = 0; i < numthread; i++) {
-    threadvec.push_back(move(thread([&](int idx) -> void {
-      shared_ptr<vector<double>> str;
+    threadvec.emplace_back(thread([&](int idx) -> void {
+      decltype(iter) localiter;
       while (true) {
         {
           lock_guard<mutex> guard(read_mutex);
-          if (iter == data.end())
+          if (iter == datamap.end())
             return;
-          str = *iter;
+          localiter = iter;
           iter++;
         }
-        algvec[idx]->set_string(str);
+        algvec[idx]->set_string(localiter->second);
         algvec[idx]->run();
+	auto tmpres = algvec[idx]->get_result();
         {
           lock_guard<mutex> guard(write_mutex);
-          res[id[idx]] = algvec[idx]->get_result();
+          res[localiter->first] = *(algvec[idx]->get_result());
         }
       }
-    }, i)));
+    }, i));
   }
   for (auto &t : threadvec) {
     t.join();
@@ -103,9 +104,10 @@ int main(int argc, char *argv[]) {
 
   /* prepare algorithm */
   SegAlgFactory factory;
-  vector<unique_ptr<SegAlg>> algvec(numthread);
+  vector<unique_ptr<SegAlg>> algvec;
+  algvec.reserve(numthread);
   for (int i = 0; i < numthread; i++) {
-    algvec[i] = factory.make(algtype);
+    algvec.emplace_back(factory.make(algtype));
     algvec[i]->set_parameter("numseg", numseg);
     algvec[i]->set_fitalg(fittype);
   }
@@ -124,11 +126,10 @@ int main(int argc, char *argv[]) {
   int idlength = 0;
   string id;
   double num = 0.0;
-  vector<shared_ptr<vector<double>>> datavec(batchsize);
-  vector<string> idvec(batchsize);
+  map<string, shared_ptr<vector<double>>> datamap;
   bool isfirst = true;
   int length = 0;
-  map<string, shared_ptr<vector<Segment>>> result;
+  map<string, vector<Segment>> result;
 
   for (string line; getline(infileobj, line);) {
     // prepare for ss to read
@@ -157,32 +158,32 @@ int main(int argc, char *argv[]) {
       continue;
 
     // load the numbers;
-    vector<double> seq(length - 1);
+    shared_ptr<vector<double>> seq(new vector<double>);
+    seq->reserve(length - 1);
     while (!ss.eof()) {
       ss >> num;
-      seq.push_back(num);
+      seq->push_back(num);
     }
-    datavec.push_back(make_shared<vector<double>>(seq));
-  }
-  idvec.push_back(id);
+    datamap[id] = seq;
 
-  // process the batch
-  if (datavec.size() >= batchsize or infileobj.eof()) {
-    batch_process(datavec, idvec, numthread, algvec, result);
-    /* clear data */
-    datavec.clear();
-    idvec.clear();
-    /* output result */
-    for (auto &kv : result) {
-      outfileobj << kv.first << "\t[";
-      for (auto &seg : (*kv.second)) {
-        outfileobj << '(' << seg.headIndex << ',' << seg.tailIndex << ','
-                   << seg.a << ',' << seg.b << ',' << seg.c << ',' << seg.loss
-                   << ',' << seg.order << "),";
+    // process the batch
+    if (datamap.size() >= batchsize or infileobj.eof()) {
+      batch_process(datamap, numthread, algvec, result);
+      /* clear data */
+      datamap.clear();
+      /* output result */
+      for (auto &kv : result) {
+        outfileobj << kv.first << "\t[";
+        for (auto &seg : kv.second) {
+          outfileobj << '(' << seg.headIndex << ',' << seg.tailIndex << ','
+                     << seg.a << ',' << seg.b << ',' << seg.c << ',' << seg.loss
+                     << ',' << seg.order << "),";
+        }
+        outfileobj << "]\n";
       }
-      outfileobj << "]\n";
+      outfileobj.flush();
+      result.clear();
     }
-    outfileobj.flush();
   }
 
   return 0;

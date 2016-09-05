@@ -5,13 +5,13 @@
 
 SegAlg::SegAlg()
     : _scale(100.0), _result(new vector<Segment>), _fitAlg(std::nullptr_t()),
-      _name(""), _fitAlgFactory(new FitAlgFactory()) {}
+      _name(""), _fitAlgFactory(new FitAlgFactory()), _shrS(std::nullptr_t()) {}
 
 SegAlg::~SegAlg() {}
 
 void SegAlg::set_fitalg(string n) { _fitAlg = _fitAlgFactory->make(n); }
 
-void SegAlg::set_string(shared_ptr<vector<double> > &pd) {
+void SegAlg::set_string(shared_ptr<vector<double>> &pd) {
   if (_fitAlg != std::nullptr_t()) {
     _shrS = pd;
     _fitAlg->set_string(pd);
@@ -52,4 +52,4 @@ void SegAlg::set_parameter(string n, string v) {
 }
 
 /// get result
-shared_ptr<vector<Segment> > SegAlg::get_result() { return _result; }
+shared_ptr<vector<Segment>> SegAlg::get_result() { return _result; }

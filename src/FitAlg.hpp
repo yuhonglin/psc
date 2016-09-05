@@ -70,7 +70,7 @@ public:
   virtual void set_parameter(string n, string v);
 
   /// set string and scale
-  virtual void set_string(shared_ptr<vector<double> > &vpd);
+  virtual void set_string(const shared_ptr<vector<double> > &vpd);
 
   /// dump information
   virtual void dump();

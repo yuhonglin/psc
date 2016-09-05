@@ -48,7 +48,7 @@ void FitAlg::set_parameter(string n, string v) {
 }
 
 /// set string
-void FitAlg::set_string(shared_ptr<vector<double> > &vpd) {
+void FitAlg::set_string(const shared_ptr<vector<double> > &vpd) {
   _shrS = vpd;
 
   double maxS = 0;

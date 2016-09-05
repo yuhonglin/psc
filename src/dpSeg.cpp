@@ -21,13 +21,12 @@ DpSeg::DpSeg() {
 }
 
 void DpSeg::run() {
-
   int tmpIdx = 0;
   Segment tmpSegment;
 
   vector<double> tmpFitLoss(_shrS->size());
   vector<double> fitLoss(_shrS->size());
-
+  
   _scaledSwitchModelPenalty =
       _inputedSwitchModelPenalty / 10000.0 * _scale * _scale * _shrS->size();
 
