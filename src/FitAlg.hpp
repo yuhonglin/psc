@@ -14,6 +14,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <limits>
 
 using std::vector;
 using std::string;
@@ -37,13 +38,13 @@ enum FITORDER {
  */
 
 struct Segment {
-  int headIndex;
-  int tailIndex;
-  double a;
-  double b;
-  double c;
-  double loss;
-  FITORDER order;
+  int headIndex = -1;
+  int tailIndex = -1;
+  double a = std::numeric_limits<double>::quiet_NaN();
+  double b = std::numeric_limits<double>::quiet_NaN();
+  double c = std::numeric_limits<double>::quiet_NaN();
+  double loss = std::numeric_limits<double>::quiet_NaN();
+  FITORDER order = ASCEND;
 };
 
 /**
