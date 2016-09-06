@@ -10,13 +10,6 @@ FitAlg::FitAlg() {
   _length = 0;
 
   _scale = 100.0;
-
-  _segment.headIndex = std::numeric_limits<int>::quiet_NaN();
-  _segment.tailIndex = std::numeric_limits<int>::quiet_NaN();
-  _segment.a = std::numeric_limits<double>::quiet_NaN();
-  _segment.b = std::numeric_limits<double>::quiet_NaN();
-  _segment.c = std::numeric_limits<double>::quiet_NaN();
-  _segment.order = ASCEND;
 }
 
 Segment FitAlg::get_segment() { return _segment; }
