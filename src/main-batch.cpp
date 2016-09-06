@@ -111,6 +111,12 @@ int main(int argc, char *argv[]) {
   if (batchsize >= numeric_limits<unsigned int>::max())
     LOG_ERROR("batchsize is too big");
 
+  if (numthread < 1)
+    LOG_ERROR("nthread should be >0");
+
+  if (numseg < 1)
+    LOG_ERROR("numseg should be >0");
+
   /* prepare algorithm */
   SegAlgFactory factory;
   vector<unique_ptr<SegAlg>> algvec;
