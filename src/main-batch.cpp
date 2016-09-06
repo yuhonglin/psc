@@ -169,7 +169,7 @@ int main(int argc, char *argv[]) {
     ss >> id;
 
     // allow/skip comments
-    if (id[0] == '#')
+    if (id.size()==0 or id[0] == '#')
       continue;
 
     // load the numbers;
