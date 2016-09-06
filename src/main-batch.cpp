@@ -3,10 +3,12 @@
 #include <vector>
 #include <map>
 #include <queue>
+#include <utility>
 #include <limits>
 #include <list>
 #include <string>
 #include <sstream>
+#include <limits>
 #include <thread>
 #include <mutex>
 
@@ -24,9 +26,10 @@
 
 using namespace std;
 
-inline void batch_process(map<string, shared_ptr<vector<double>>> &datamap,
-                          int &numthread, vector<unique_ptr<SegAlg>> &algvec,
-                          map<string, vector<Segment>> &res) {
+inline void batch_process(
+    map<unsigned int, pair<string, shared_ptr<vector<double>>>> &datamap,
+    int &numthread, vector<unique_ptr<SegAlg>> &algvec,
+    map<unsigned int, pair<string, vector<Segment>>> &res) {
   vector<thread> threadvec;
   mutex read_mutex, write_mutex;
   auto iter = datamap.begin();
@@ -42,12 +45,13 @@ inline void batch_process(map<string, shared_ptr<vector<double>>> &datamap,
           localiter = iter;
           iter++;
         }
-        algvec[idx]->set_string(localiter->second);
+        algvec[idx]->set_string(localiter->second.second);
         algvec[idx]->run();
 	auto tmpres = algvec[idx]->get_result();
         {
           lock_guard<mutex> guard(write_mutex);
-          res[localiter->first] = *(algvec[idx]->get_result());
+          res[localiter->first] = pair<string, vector<Segment>>(
+              localiter->second.first, *(algvec[idx]->get_result()));
         }
       }
     }, i));
@@ -102,6 +106,11 @@ int main(int argc, char *argv[]) {
   int batchsize = opt.get_int("-batchsize");
   int numseg = opt.get_int("-numseg");
 
+  if (batchsize < 1)
+    LOG_ERROR("batchsize is too small");
+  if (batchsize >= numeric_limits<unsigned int>::max())
+    LOG_ERROR("batchsize is too big");
+
   /* prepare algorithm */
   SegAlgFactory factory;
   vector<unique_ptr<SegAlg>> algvec;
@@ -126,11 +135,11 @@ int main(int argc, char *argv[]) {
   int idlength = 0;
   string id;
   double num = 0.0;
-  map<string, shared_ptr<vector<double>>> datamap;
+  map<unsigned int, pair<string, shared_ptr<vector<double>>>> datamap;
   bool isfirst = true;
   int length = 0;
-  map<string, vector<Segment>> result;
-
+  map<unsigned int, pair<string, vector<Segment>>> result;
+  unsigned int idxbatch = 0;
   for (string line; getline(infileobj, line);) {
     // prepare for ss to read
     // and at the same time count sequence length
@@ -164,7 +173,8 @@ int main(int argc, char *argv[]) {
       ss >> num;
       seq->push_back(num);
     }
-    datamap[id] = seq;
+    datamap[idxbatch] = pair<string, shared_ptr<vector<double>>> (id,seq);
+    idxbatch ++;
 
     // process the batch
     if (datamap.size() >= batchsize or infileobj.eof()) {
@@ -173,8 +183,8 @@ int main(int argc, char *argv[]) {
       datamap.clear();
       /* output result */
       for (auto &kv : result) {
-        outfileobj << kv.first << "\t[";
-        for (auto &seg : kv.second) {
+        outfileobj << kv.second.first << "\t[";
+        for (auto &seg : kv.second.second) {
           outfileobj << '(' << seg.headIndex << ',' << seg.tailIndex << ','
                      << seg.a << ',' << seg.b << ',' << seg.c << ',' << seg.loss
                      << ',' << seg.order << "),";
@@ -183,6 +193,7 @@ int main(int argc, char *argv[]) {
       }
       outfileobj.flush();
       result.clear();
+      idxbatch = 0;
     }
   }
 
