@@ -47,7 +47,7 @@ inline void batch_process(
         }
         algvec[idx]->set_string(localiter->second.second);
         algvec[idx]->run();
-	auto tmpres = algvec[idx]->get_result();
+        auto tmpres = algvec[idx]->get_result();
         {
           lock_guard<mutex> guard(write_mutex);
           res[localiter->first] = pair<string, vector<Segment>>(
@@ -169,7 +169,7 @@ int main(int argc, char *argv[]) {
     ss >> id;
 
     // allow/skip comments
-    if (id.size()==0 or id[0] == '#')
+    if (id.size() == 0 or id[0] == '#')
       continue;
 
     // load the numbers;
@@ -179,8 +179,8 @@ int main(int argc, char *argv[]) {
       ss >> num;
       seq->push_back(num);
     }
-    datamap[idxbatch] = pair<string, shared_ptr<vector<double>>> (id,seq);
-    idxbatch ++;
+    datamap[idxbatch] = pair<string, shared_ptr<vector<double>>>(id, seq);
+    idxbatch++;
 
     // process the batch
     if (datamap.size() >= batchsize or infileobj.eof()) {

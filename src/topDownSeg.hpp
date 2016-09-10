@@ -7,6 +7,8 @@
  *
  *
  */
+#ifndef TOPDOWNSEG_H
+#define TOPDOWNSEG_H
 
 #include <memory>
 #include <vector>
@@ -46,3 +48,5 @@ private:
   /// record the fitting result to avoid refit
   map<pair<int, int>, Segment> _boundary_segment;
 };
+
+#endif /* TOPDOWNSEG_H */
