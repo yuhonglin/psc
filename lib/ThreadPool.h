@@ -1,8 +1,10 @@
 // source: https://raw.githubusercontent.com/progschj/ThreadPool/master/ThreadPool.h
-// author: Jakob Progsch
+// original author: Jakob Progsch
 
 #ifndef THREAD_POOL_H
 #define THREAD_POOL_H
+
+namespace dms {
 
 #include <vector>
 #include <queue>
@@ -96,6 +98,8 @@ inline ThreadPool::~ThreadPool()
     condition.notify_all();
     for(std::thread &worker: workers)
         worker.join();
+}
+
 }
 
 #endif
